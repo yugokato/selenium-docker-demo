@@ -1,0 +1,6 @@
+pytest
+pytest-xdist
+docker
+selenium>=3.14.0
+beautifulsoup4
+html5lib

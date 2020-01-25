@@ -1,0 +1,7 @@
+videos/
+*.py[cod]
+.python-version
+.pytest_cache/
+.idea/
+__pycache__/
+.DS_Store
