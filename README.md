@@ -138,7 +138,7 @@ Clone this repository and `cd` into directory,
 
 ```bash
 # Install dependencies
-$ pip install -r requirements
+$ pip install -r requirements.txt
 
 # Build images
 $ ./build/build_browser_image.py
