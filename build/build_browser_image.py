@@ -124,6 +124,11 @@ def build_image(browser_name, desired_browser_version="latest", force=False):
         """Base class for browser image builder"""
 
         docker_client = docker.from_env()
+        try:
+            docker_client.ping()
+        except Exception:
+            sys.exit("ERROR: Unable to connect to the Docker daemon. "
+                     "Is the docker daemon running on this host?")
 
         def __init__(self, browser_name, desired_browser_version="latest", force=False):
             self.browser_name = browser_name
