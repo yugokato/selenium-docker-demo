@@ -183,7 +183,7 @@ def test_open_google(driver):
 from selenium_automation.framework import App
 
 # wrap driver
-@pytest.fixture(scope="module")
+@pytest.fixture
 def app(driver):
     myapp = App(driver)
     return myapp
