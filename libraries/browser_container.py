@@ -18,7 +18,9 @@ if TYPE_CHECKING:
 
 DEFAULT_SELENIUM_PORT = 4444
 SELENIUM_SERVER_IP = "127.0.0.1"
-CONTAINER_DATA_DIR = "/home/seluser/videos"
+CONTAINER_VIDEO_DIR = "/home/seluser/videos"
+CONTAINER_WINDOW_WIDTH = "1360"
+CONTAINER_WINDOW_HEIGHT = "1020"
 
 
 class BrowserContainer(object):
@@ -50,7 +52,7 @@ class BrowserContainer(object):
                 f"{DEFAULT_SELENIUM_PORT}/tcp": self.selenium_port,
                 f"{DEFAULT_VNC_PORT}/tcp": self.vnc_port,
             },
-            volumes={self.record_dir: {"bind": CONTAINER_DATA_DIR, "mode": "rw"}},
+            volumes={self.record_dir: {"bind": CONTAINER_VIDEO_DIR, "mode": "rw"}},
             detach=True,
             remove=True,
             shm_size="2g",
@@ -59,6 +61,15 @@ class BrowserContainer(object):
         if self.headless:
             # Disable Xvfb
             params["environment"].update({"START_XVFB": "false"})
+            # Set proper window size (Firefox) for screenshot
+            # https://github.com/mozilla/geckodriver/issues/1354
+            if self.browser_type == "firefox":
+                params["environment"].update(
+                    {
+                        "MOZ_HEADLESS_WIDTH": CONTAINER_WINDOW_WIDTH,
+                        "MOZ_HEADLESS_HEIGHT": CONTAINER_WINDOW_HEIGHT,
+                    }
+                )
 
         # Run container
         self.__container = self.docker_client.containers.run(**params)
@@ -91,8 +102,9 @@ class BrowserContainer(object):
         filename = convert_to_filename(mp4_filename)
 
         cmd = (
-            f"ffmpeg -video_size 1360x1020 -framerate 15 -f x11grab -i :99.0 "
-            f"-pix_fmt yuv420p {CONTAINER_DATA_DIR}/{filename}"
+            f"ffmpeg -video_size {CONTAINER_WINDOW_WIDTH}x{CONTAINER_WINDOW_HEIGHT} "
+            f"-framerate 15 -f x11grab -i :99.0 "
+            f"-pix_fmt yuv420p {CONTAINER_VIDEO_DIR}/{filename}"
         )
         self._exec_run(cmd, detach=True)
         try:

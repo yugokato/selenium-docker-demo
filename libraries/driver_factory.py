@@ -3,6 +3,8 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from selenium.webdriver.chrome.options import Options as ChromeOptions
 from selenium.webdriver.firefox.options import Options as FirefoxOptions
 
+from .browser_container import CONTAINER_WINDOW_WIDTH, CONTAINER_WINDOW_HEIGHT
+
 
 SUPPORTED_BROWSERS = ["chrome", "firefox"]
 
@@ -60,7 +62,10 @@ class DriverFactory(object):
         if browser_type == "chrome":
             capabilities = DesiredCapabilities.CHROME.copy()
             chrome_options = ChromeOptions()
-            prefs = {"safebrowsing.enabled": "false"}  # Disables warning popup
+            prefs = {
+                "credentials_enable_service": False,
+                "profile.password_manager_enabled": False,
+            }
             chrome_options.add_experimental_option("prefs", prefs)
             chrome_options.add_experimental_option(
                 "excludeSwitches", ["enable-automation"]
@@ -68,6 +73,9 @@ class DriverFactory(object):
             chrome_options.add_experimental_option("useAutomationExtension", False)
             if headless:
                 chrome_options.add_argument("--headless")
+                chrome_options.add_argument(
+                    f"--window-size={CONTAINER_WINDOW_WIDTH}x{CONTAINER_WINDOW_HEIGHT}"
+                )
             params = dict(
                 command_executor=command_executor,
                 desired_capabilities=capabilities,
@@ -84,7 +92,6 @@ class DriverFactory(object):
                 "application/x-excel,application/vnd.ms-excel,"
                 "image/png,image/jpeg,text/html,text/plain,"
                 "application/msword,application/xml,"
-                "application/octet-stream,application/vnd.tcpdump.pcap"
             )
             firefox_profile.set_preference("browser.download.folderList", 1)
             firefox_profile.set_preference(
