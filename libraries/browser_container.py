@@ -111,7 +111,8 @@ class BrowserContainer(object):
             yield  # do test
         finally:
             # Stop recording
-            self._exec_run("pkill -SIGINT ffmpeg")
+            cmd = "timeout 5 sh -c 'pkill -SIGINT ffmpeg && while [ $(pgrep ffmpeg) ]; do sleep 0.1; done'"
+            self._exec_run(cmd)
             print(f"Video recorded: {Path(self.record_dir, filename)}")
 
     def _wait_for_selenium_server_to_be_ready(self, timeout=30):
@@ -143,7 +144,12 @@ class BrowserContainer(object):
         )
 
         if not detach and exit_code != 0:
-            print(f"exit_code: {exit_code}\nerror: {output.decode('utf-8')}")
+            err = (
+                f"Command ran in the container failed\n"
+                f"- exit_code: {exit_code}\n"
+                f"- output: {output.decode('utf-8')}"
+            )
+            print(err)
 
 
 def convert_to_filename(s):
