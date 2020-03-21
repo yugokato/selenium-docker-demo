@@ -166,7 +166,7 @@ $ ./build/build_browser_image.py --chrome-version 69.0.3497.100 --firefox-versio
 
 
 # Write your own script
-The module-scoped `driver` fixture (Instance of Selenium RemoteWebDriver) is available in your test functions. It is implicitly parametrized based on various browser types and browser versions you passed as Pytest command line arguments, or Chrome/Firefox latest versions by default. A corresponding browser container should be up and running by the time a test function is executed.  
+The `driver` fixture (Instance of Selenium RemoteWebDriver) is available in your test functions. It is implicitly parametrized based on various browser types and browser versions you passed as Pytest command line arguments, or Chrome/Firefox latest versions by default. A corresponding browser container should be up and running by the time a test function is executed.  
 Either use the `driver` as it is or define a custom fixture that wraps the `driver` with your own GUI automation framework.
 
 
@@ -179,16 +179,17 @@ def test_open_google(driver):
 
 
 ```python
-# Import automation framework
+# Import your automation framework
 from selenium_automation.framework import App
 
-# wrap driver
 @pytest.fixture
 def app(driver):
     myapp = App(driver)
-    return myapp
+    myapp.login()
+    yield myapp
+    myapp.logout()
 
-def test_login(app):
-    logged_in = app.login("test_username", "test_password")
-    assert logged_in
+def test_do_something(app):
+    result = app.do_something()
+    assert result
 ```
