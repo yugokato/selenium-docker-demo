@@ -1,41 +1,33 @@
 from selenium import webdriver
-from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-from selenium.webdriver.chrome.options import Options as ChromeOptions
-from selenium.webdriver.firefox.options import Options as FirefoxOptions
+from selenium.webdriver import ChromeOptions, EdgeOptions, FirefoxOptions
+from selenium.webdriver.remote.webdriver import WebDriver
 
-from .browser_container import CONTAINER_WINDOW_WIDTH, CONTAINER_WINDOW_HEIGHT
-
-
-SUPPORTED_BROWSERS = ["chrome", "firefox"]
+from libraries.browser_container import CONTAINER_WINDOW_HEIGHT, CONTAINER_WINDOW_WIDTH, SUPPORTED_BROWSERS
 
 
 class DriverFactory(object):
-    """Class to create a remote WebDriver object for chrome and firefox"""
+    """Class to create a remote WebDriver object for various browsers"""
 
     @staticmethod
     def create(
-        browser_type,
-        remote_selenium_server_ip="127.0.0.1",
-        remote_selenium_server_port=4444,
-        headless=False,
-    ):
+        browser_type: str,
+        remote_selenium_server_ip: str = "127.0.0.1",
+        remote_selenium_server_port: int = 4444,
+        headless: bool = False,
+    ) -> WebDriver:
         """Get a Selenium WebDriver object for the browser container. It retries until the browser
            container becomes ready after being spun up
 
-        Arguments:
-            browser_type (str): Browser type (chrome/firefox)
-            remote_selenium_server_ip (str): Remote WebDriver Server IP address
-            remote_selenium_server_ip (int): Remote WebDriver Server port
-            headless (bool): Headless mode
-
-        Returns:
-            WebDriver: Remote WebDriver object
+        :param browser_type: Browser type (chrome/firefox/edge)
+        :param remote_selenium_server_ip: Remote WebDriver Server IP address
+        :param remote_selenium_server_port: Remote WebDriver Server port
+        :param headless: Headless mode
         """
         if browser_type not in SUPPORTED_BROWSERS:
             raise Exception(f"{browser_type} is not supported")
 
         # Create driver
-        driver = DriverFactory.__init_driver(
+        driver = DriverFactory._init_driver(
             browser_type,
             remote_selenium_server_ip,
             remote_selenium_server_port,
@@ -48,67 +40,31 @@ class DriverFactory(object):
         return driver
 
     @staticmethod
-    def __init_driver(
-        browser_type,
-        remote_selenium_server_ip,
-        remote_selenium_server_port,
-        headless=False,
-    ):
-        command_executor = (
-            f"http://{remote_selenium_server_ip}:{remote_selenium_server_port}/wd/hub"
-        )
+    def _init_driver(
+        browser_type: str, remote_selenium_server_ip: str, remote_selenium_server_port: int, headless: bool = False
+    ) -> WebDriver:
+        command_executor = f"http://{remote_selenium_server_ip}:{remote_selenium_server_port}"
 
-        # Google Chrome
         if browser_type == "chrome":
-            capabilities = DesiredCapabilities.CHROME.copy()
-            chrome_options = ChromeOptions()
-            prefs = {
-                "credentials_enable_service": False,
-                "profile.password_manager_enabled": False,
-            }
-            chrome_options.add_experimental_option("prefs", prefs)
-            chrome_options.add_experimental_option(
-                "excludeSwitches", ["enable-automation"]
-            )
-            chrome_options.add_experimental_option("useAutomationExtension", False)
+            options = ChromeOptions()
+            options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            options.add_experimental_option("useAutomationExtension", False)
             if headless:
-                chrome_options.add_argument("--headless")
-                chrome_options.add_argument(
-                    f"--window-size={CONTAINER_WINDOW_WIDTH}x{CONTAINER_WINDOW_HEIGHT}"
-                )
-            params = dict(
-                command_executor=command_executor,
-                desired_capabilities=capabilities,
-                options=chrome_options,
-            )
-        # Mozilla Firefox
+                options.headless = True
+                options.add_argument(f"--window-size={CONTAINER_WINDOW_WIDTH}x{CONTAINER_WINDOW_HEIGHT}")
+        elif browser_type == "firefox":
+            options = FirefoxOptions()
+            options.set_capability("platformName", "Linux")
+            if headless:
+                options.headless = True
         else:
-            capabilities = DesiredCapabilities.FIREFOX.copy()
-            firefox_profile = webdriver.FirefoxProfile()
-            firefox_options = FirefoxOptions()
-            # Suppress popups or user's confirmation when downloading files (Add more if you need)
-            prefs = (
-                "text/csv,application/x-msexcel,application/excel,"
-                "application/x-excel,application/vnd.ms-excel,"
-                "image/png,image/jpeg,text/html,text/plain,"
-                "application/msword,application/xml,"
-            )
-            firefox_profile.set_preference("browser.download.folderList", 1)
-            firefox_profile.set_preference(
-                "browser.helperApps.neverAsk.openFile", prefs
-            )
-            firefox_profile.set_preference(
-                "browser.helperApps.neverAsk.saveToDisk", prefs
-            )
-            firefox_profile.update_preferences()
-            firefox_options.profile = firefox_profile
+            options = EdgeOptions()
+            options.use_chromium = True
+            options.set_capability("platform", "Linux")
+            options.add_experimental_option("excludeSwitches", ["enable-automation"])
+            options.add_experimental_option("useAutomationExtension", False)
             if headless:
-                firefox_options.add_argument("--headless")
-            params = dict(
-                command_executor=command_executor,
-                desired_capabilities=capabilities,
-                options=firefox_options,
-            )
-
-        driver = webdriver.Remote(**params)
+                options.headless = True
+                options.add_argument(f"--window-size={CONTAINER_WINDOW_WIDTH}x{CONTAINER_WINDOW_HEIGHT}")
+        driver = webdriver.Remote(command_executor=command_executor, options=options)
         return driver

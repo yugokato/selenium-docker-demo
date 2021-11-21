@@ -1,42 +1,30 @@
 from contextlib import suppress
-from pathlib import Path
 
 import pytest
+from _pytest.fixtures import FixtureRequest
+from selenium.webdriver.support.ui import WebDriverWait
 
 from libraries.browser_container import BrowserContainer
 from libraries.driver_factory import DriverFactory
-from libraries.vnc_client import VncClient
 
 
-@pytest.fixture(scope="module")
-def browser(request, browser_type_and_version, worker_id, headless, record_dir):
+@pytest.fixture(scope="session")
+def browser(browser_type, browser_version, headless, record_dir):
     """Parametrized browser container (Selenium Remote Server)"""
-    browser_type, browser_version = browser_type_and_version
 
-    # Use alternative host ports incremented by the index for parallel testing with pytest-xdist.
-    # This avoids host port conflicts among containers
-    index = 0 if worker_id == "master" else int(worker_id[-1])
-
-    # Run browser container
-    container = BrowserContainer(
-        browser_type,
-        browser_version,
-        index=index,
-        headless=headless,
-        record_dir=(record_dir or Path(request.config.rootdir, "videos")),
-    ).run()
-
-    # Connect to the VNC server (for non-headless mode)
-    with VncClient(port=container.vnc_port).connect() if not headless else suppress():
-        yield container
+    container = BrowserContainer(browser_type, browser_version, headless=headless, record_dir=record_dir).run()
+    if not headless:
+        container.open_browser(view_only=True)
+    yield container
     container.delete()
 
 
 @pytest.fixture
-def driver(request, browser, record):
+def driver(request: FixtureRequest, browser, record):
     """Selenium RemoteWebDriver"""
     driver = DriverFactory.create(
         browser.browser_type,
+        remote_selenium_server_ip=browser.selenium_server,
         remote_selenium_server_port=browser.selenium_port,
         headless=browser.headless,
     )
@@ -50,3 +38,8 @@ def driver(request, browser, record):
     except Exception:
         # Ignore any exceptions in case the container has been already deleted
         pass
+
+
+@pytest.fixture
+def wait(driver):
+    return WebDriverWait(driver, 30)
