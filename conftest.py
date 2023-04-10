@@ -5,7 +5,6 @@ import pytest
 from _pytest.main import Session
 
 from libraries.browser_container import SUPPORTED_BROWSERS
-from libraries.pytest_xdist_browserscope import LoadBrowserScheduling
 
 
 def pytest_addoption(parser):
@@ -40,11 +39,6 @@ def pytest_keyboard_interrupt(excinfo):
     cleanup_containers()
 
 
-def pytest_xdist_make_scheduler(config, log):
-    """Custom pytest-xdist load scheduler for grouping tests by browser type"""
-    return LoadBrowserScheduling(config, log)
-
-
 def pytest_generate_tests(metafunc):
     """Dynamically parametrize browser type based on arguments passed to Pytest command"""
     if "browser_type" in metafunc.fixturenames:
@@ -52,9 +46,12 @@ def pytest_generate_tests(metafunc):
         browsers = option.browsers
         browser_type_and_version_pairs = []
         ids = []
+        # For now, we only support the latest version in this demo. This can be expanded to support multiple versions
         version = "latest"
         for browser in browsers:
-            browser_type_and_version_pairs.extend([(browser, version)])
+            browser_type_and_version_pairs.extend(
+                [pytest.param(browser, version, marks=pytest.mark.xdist_group(f"{browser}:{version}"))]
+            )
             ids.extend([f"({browser}:{version})"])
 
         metafunc.parametrize(

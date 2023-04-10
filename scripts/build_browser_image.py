@@ -29,7 +29,7 @@ from docker.errors import DockerException
 
 from libraries.browser_container import SUPPORTED_BROWSERS
 
-SELENIUM_BASE_IMAGE_TAG = "4.1"
+SELENIUM_BASE_IMAGE_TAG = "4.8"
 DOCKERFILE = (
     # Add capability to record video
     "FROM {base_image}\n"

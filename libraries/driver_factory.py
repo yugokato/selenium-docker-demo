@@ -45,26 +45,30 @@ class DriverFactory(object):
     ) -> WebDriver:
         command_executor = f"http://{remote_selenium_server_ip}:{remote_selenium_server_port}"
 
-        if browser_type == "chrome":
-            options = ChromeOptions()
+        if browser_type in ["chrome", "edge"]:
+            if browser_type == "chrome":
+                options = ChromeOptions()
+            else:
+                options = EdgeOptions()
+                options.use_chromium = True
+            prefs = {
+                "credentials_enable_service": False,
+                "profile.password_manager_enabled": False,
+            }
+            options.add_experimental_option("prefs", prefs)
             options.add_experimental_option("excludeSwitches", ["enable-automation"])
             options.add_experimental_option("useAutomationExtension", False)
             if headless:
-                options.headless = True
+                options.add_argument("--headless")
                 options.add_argument(f"--window-size={CONTAINER_WINDOW_WIDTH}x{CONTAINER_WINDOW_HEIGHT}")
         elif browser_type == "firefox":
             options = FirefoxOptions()
-            options.set_capability("platformName", "Linux")
             if headless:
-                options.headless = True
+                options.add_argument("--headless")
         else:
-            options = EdgeOptions()
-            options.use_chromium = True
-            options.set_capability("platform", "Linux")
-            options.add_experimental_option("excludeSwitches", ["enable-automation"])
-            options.add_experimental_option("useAutomationExtension", False)
-            if headless:
-                options.headless = True
-                options.add_argument(f"--window-size={CONTAINER_WINDOW_WIDTH}x{CONTAINER_WINDOW_HEIGHT}")
+            raise NotImplementedError(f"Unsupported browser: {browser_type}")
+
+        options.set_capability("platformName", "Linux")
+
         driver = webdriver.Remote(command_executor=command_executor, options=options)
         return driver

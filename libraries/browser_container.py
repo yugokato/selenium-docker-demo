@@ -15,7 +15,6 @@ import requests
 from docker.models.containers import Container
 
 SUPPORTED_BROWSERS = ["chrome", "firefox", "edge"]
-SELENIUM_BASE_IMAGE_TAG = "4.1"
 DEFAULT_SELENIUM_SERVER = "localhost"
 DEFAULT_SELENIUM_PORT = 4444
 DEFAULT_NOVNC_PORT = 7900
@@ -102,9 +101,8 @@ class BrowserContainer(object):
 
     def open_browser(self, view_only: bool = False):
         """Open browser via noVNC"""
-        webbrowser.open_new(
-            f"http://{self.selenium_server}:{self.novnc_port}?autoconnect=true&view_only={'true' if view_only else 'false'}"
-        )
+        options = f"?autoconnect=true&view_only={'true' if view_only else 'false'}"
+        webbrowser.open_new(f"http://{self.selenium_server}:{self.novnc_port}{options}")
 
     @contextmanager
     def record_video(self, mp4_filename: str):

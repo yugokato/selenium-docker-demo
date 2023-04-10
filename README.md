@@ -31,7 +31,7 @@ $ pytest -v
 
 ##### *System requirements*
 - *nix OS
-- Docker (Tested with version 20.10.6, build 370c289)
+- Docker (Tested with version 20.10.13, build a224086)
 - Python >= 3.8 (Tested with 3.8.9 and 3.9.8)
 
 
@@ -58,7 +58,7 @@ custom options:
 $ pytest [PYTEST_OPTIONS]
 
 # Run tests with all browsers in parallel using pytest-xdist
-$ pytest [PYTEST_OPTIONS] -n 3
+$ pytest [PYTEST_OPTIONS] -n 3 --dist=loadgroup
 
 # Run tests with a specific browser
 $ pytest [PYTEST_OPTIONS] --browser chrome
@@ -105,7 +105,7 @@ tests/test_google.py::test_google[(edge:latest)-bird] PASSED                    
 
 ##### *Parallel testing*
 ```bash
-~/Desktop/selenium-docker-demo$ pytest -v tests/test_google.py --headless -n 3
+~/Desktop/selenium-docker-demo$ pytest -v tests/test_google.py --headless -n 3 --dist=loadgroup
 ================================== test session starts ===================================
 platform darwin -- Python 3.9.8, pytest-6.2.5, py-1.11.0, pluggy-1.0.0 -- /Users/yugo/.pyenv/versions/3.9.8/envs/selenium-docker-demo-3.9.8/bin/python3.9
 cachedir: .pytest_cache

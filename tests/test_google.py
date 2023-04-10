@@ -13,7 +13,7 @@ def test_google(driver, wait, search_word):
     wait.until(EC.url_to_be(url))
     assert driver.current_url == url
 
-    q = wait.until(EC.presence_of_element_located((By.XPATH, "//input[@name='q']")))
+    q = wait.until(EC.presence_of_element_located((By.XPATH, "//*[@name='q']")))
     q.send_keys(search_word)
     q.send_keys(Keys.ENTER)
 
