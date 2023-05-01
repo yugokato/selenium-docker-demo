@@ -59,7 +59,7 @@ class DriverFactory(object):
             options.add_experimental_option("excludeSwitches", ["enable-automation"])
             options.add_experimental_option("useAutomationExtension", False)
             if headless:
-                options.add_argument("--headless")
+                options.add_argument("--headless=new")
                 options.add_argument(f"--window-size={CONTAINER_WINDOW_WIDTH}x{CONTAINER_WINDOW_HEIGHT}")
         elif browser_type == "firefox":
             options = FirefoxOptions()
